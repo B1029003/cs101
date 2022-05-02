@@ -1,60 +1,32 @@
-#include <stdio.h>
-#include <time.h>
-#include <stdlib.h>
+#include<stdio.h>
+#include<stdlib.h> 
+#include<time.h>
 #include <string.h>
 
-FILE *fp;
-FILE *binfile;
-FILE *operator_id;
+FILE* lottery_txt;
+FILE* binfile;
+FILE* operatorId;
 static int currentCount;
-static int operaterNum;
-
-void get_6_ram(int t, FILE *fp) {
-    int i, n, j, temp;
-    fprintf(fp,"[%d]: ",t);
-    srand((unsigned)time(NULL)+t);
-    int num[7];
-    for ( i = 0 ; i<7 ; i++) {
-        temp = ((rand() % 69) +1);
-        for(n=0 ; n<i ; n++) {
-            if(temp == num[n]){
-                i--;
-                break;
-            }
-        }
-        if(temp!=num[n]) {
-            num[i] = temp;
-        }
-    }
-        for(int a=0 ; a<6; a++) {
-            for(int b=a+1; b<6; b++) {
-                if (num[a]>num[b]) {
-                    int tmp = num[a];
-                    num[a] =num[b];
-                    num[b] = tmp;
-            }
-        }
-    }
-
-    for(i=0 ; i<7; i++) {
-        num[6] = ((rand() % 10) +1);
-        fprintf(fp,"%02d ",num[i]);
-    }
-    fprintf(fp,"\n");
+static int id,idArr[1];
+void inputOperaterId(){
+	operatorId = fopen("operator_id.bin","wb+");
+	idArr[0] = id;
+	fwrite(idArr, sizeof(idArr), 1, operatorId);
+	fclose(operatorId);
 }
 
-void count() {
+void countTimes(){
     int read[1];
-    int write[1];
-    if((binfile = fopen("binfile.txt","r")) == NULL) {
-        binfile = fopen("binfile.txt","wb+");
-        write[0] = 1;
-        fwrite(write,sizeof(int),1,binfile);
+    int write[1];    
+    if((binfile = fopen("binfile.txt", "r")) == NULL){
+        binfile = fopen("binfile.txt", "wb+");
+        write[0] = 1;       
+        fwrite(write, sizeof(int), 1, binfile);
     }
     else{
-        binfile = fopen("binfile.txt","rb+");
+        binfile = fopen("binfile.txt", "rb+");
         fseek(binfile, 0, SEEK_SET);
-        fread(read,sizeof(int),1,binfile);
+        fread(read, sizeof(int), 1, binfile);
         fclose(binfile);    
         write[0] = read[0] + 1;
         binfile = fopen("binfile.txt", "wb+");
@@ -64,63 +36,71 @@ void count() {
     currentCount = write[0];
 }  
 
-void operaterId(int o) {
-    //int read[1];
-    int write[1];
-    //if((operator_id.bin = fopen("binfile.txt","r")) == NULL) {
-        //binfile = fopen("binfile.txt","wb+");
-        //write[0] = 1;
-        //fwrite(write,sizeof(int),1,binfile);
-    //}
-    
-    operator_id = fopen("operator_id.txt","rb+");
-    //fseek(operator_id, 0, SEEK_SET);
-    //fread(read,sizeof(int),1,operator_id);
-    //fclose(operator_id);    
-    write[0] = o;
-    operator_id = fopen("operator_id.txt", "wb+");
-    fwrite(write, sizeof(int), 1, operator_id);
-    fclose(operator_id);
-    operaterNum = write[0];
-}  
-
-    
-    
-
-
-int main() {
-    count();
-    char currentName[80];
-    char operaterNum[80];
-    int i ,t ,o;
-    sprintf(currentName, "lotto[%04d].txt", currentCount);
-    fp = fopen(currentName,"w+");
-    printf(" Welcome, please enter your operator ID:");
-    scanf("%d", &o);
-    operaterId;
-    printf("Please enter how many lotteries do you want to buy?");
-    scanf("%d", &i);
-    fprintf(fp, "======== lotto649 ========\n");
-    fprintf(fp,"======== No.%05d ========\n", currentCount);
-    time_t curtime;
-    time(&curtime);
-    char* now = ctime(&curtime);
-    now[strlen(now)-1] = 0;
-    fprintf(fp,"=%s=\n",now);
-    
-    for(t=1; t<6; t++) {
-        if(t<=i) {
-            get_6_ram(t,fp);
+void get_6_RandNum(){
+    int r[12];
+    int i = 0, j, box;
+    while(i<=5){
+        box = rand()%69+1;
+        for(j = 0; j < i; j++){
+            if(box == r[j])break;
         }
-        else {
-            fprintf(fp, "[%d]: -- -- -- -- -- -- --\n",t);
+        if(j == i){
+            r[i] = box;
+            i++;
         }
-        
     }
-    fprintf(fp,"======== No.%05d ========\n", operaterNum);
-    fprintf(fp,"======== csie@CGU ========\n");
-    fclose(fp);
-    
+    for (int a = 0; a < 6; ++a) {
+        for (int b = 0; b < a; ++b) {
+              if (r[b] > r[a]) {
+            int temp = r[b];
+            r[b] = r[a];
+            r[a] = temp;
+            }    
+           }
+    }
+    r[6] = rand()%10+1;//special number
+    for(j = 0; j <= 6; j++){
+        fprintf(lottery_txt,"%02d ",r[j]);
+    }
+}
+void Delay(unsigned int secs){
+    unsigned int retTime = time(0) + secs;
+    while (time(0) < retTime);
 }
 
+int main(){
+    int a,i;
+    char currentName[80];
+    printf("welcome to the lottery machine(?)\n");
+	printf("please input the operator ID:");
+	scanf("%d",&id);
+    printf("how many lottery you wanna buy:");
+    scanf("%d", &i);
+    /*for(int t = 1; t <= 3; t++){
+        Delay(1);
+        printf(".");
+    }*/
+    Delay(1);
+    printf("\noutput you %d set(s) of lottery to lotto.txt\n", i);
+
+    srand(time(NULL));
+    countTimes();
+    sprintf(currentName, "lotto[%04d].txt", currentCount);
+    lottery_txt = fopen(currentName,"w+");
+    time_t now;
+    time(&now);
+    char* dt = ctime(&now);
+    dt[strlen(dt)-1]=0;
+    fprintf(lottery_txt,"========= lotto649 =========\n========+ No.%05d +========\n= %s =\n",currentCount, dt);
+    for(a = 1; a <= i; a++){
+        fprintf(lottery_txt,"= [%d]:", a);
+        get_6_RandNum();
+        fprintf(lottery_txt,"=\n");
+    }
+    for(; a <= 5; a++)fprintf(lottery_txt,"= [%d]:== == == == == == == =\n", a);
+    inputOperaterId();
+    fprintf(lottery_txt, "========* Op.%05d *========\n", id);
+    fprintf(lottery_txt,"========= csie@CGU =========\n");
+    fclose(lottery_txt);
+}
 
